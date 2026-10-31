@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Memoria de filósofos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ctext y='8' font-size='8'%3E🧠%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f3f0e8;--ink:#1f2433;--mut:#5d6477;--card:#fff;--back:#2a3150;--line:#d4cfc2;--ok:#1d7a4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141826;--ink:#ecebe6;--mut:#9aa1b5;--card:#232a42;--back:#3c4673;--line:#38405e;--ok:#5fd09a}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif;padding:16px;max-width:760px;margin:0 auto}
+h1{font-size:1.7rem;margin:4px 0 2px;line-height:1.2}
+p.s{margin:0 0 14px;color:var(--mut)}
+nav{display:flex;gap:8px;margin-bottom:14px}
+button{font:inherit;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
+button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+button:focus-visible{outline:3px solid #378add;outline-offset:2px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:var(--mut)}
+#board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:560px){#board{grid-template-columns:repeat(4,1fr)}}
+.c{aspect-ratio:1;perspective:600px;padding:0;border:0;background:none;border-radius:12px}
+.in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.c.f .in,.c.m .in{transform:rotateY(180deg)}
+.fa,.bk{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.bk{background:var(--back);color:#fff;font-size:2rem;border:2px solid var(--ink)}
+.fa{transform:rotateY(180deg);border:2px solid var(--line);background:var(--card)}
+.c.m .fa{border-color:var(--ok)}
+.fa svg{width:70%;height:auto}
+.fa .e{font-size:2.2rem;line-height:1}
+.fa b{font-size:.74rem;line-height:1.2;padding:0 6px;margin-top:2px}
+#msg{margin-top:14px;min-height:3.2em;padding:10px 12px;border-left:4px solid var(--ok);background:var(--card)}
+#print{display:none}
+.sheet{display:grid;grid-template-columns:repeat(3,6cm);gap:0;justify-content:center}
+.sheet .p{width:6cm;height:6cm;border:1px dashed #888;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#000;break-inside:avoid}
+.sheet .p svg{width:4.2cm}.sheet .p .e{font-size:2.6cm;line-height:1}
+.sheet .p b{font-size:11pt;padding:0 .3cm}
+.sheet .p.r{background:#2a3150;color:#fff;font-size:2.4cm}
+.hint{color:var(--mut);font-size:.9rem}
+@media print{body{padding:0;max-width:none;background:#fff}body>*:not(#print){display:none!important}#print{display:block!important}.hint{display:none}}
+</style></head><body>
+<h1>Memoria de filósofos</h1>
+<p class="s">Une a cada filósofo con su idea clave.</p>
+<nav><button id="tj" aria-pressed="true">Jugar</button><button id="ti" aria-pressed="false">Imprimir</button></nav>
+<section id="game"><div class="bar"><span id="mv">Intentos: 0</span><button id="rs">Barajar de nuevo</button></div>
+<div id="board"></div><div id="msg" aria-live="polite">Voltea dos cartas para empezar.</div></section>
+<section id="pv" hidden><p class="hint">Se imprimen 12 cartas de 6 × 6 cm y una hoja de reversos. Recorta por las líneas punteadas. Al imprimir, elige «Guardar como PDF» si lo necesitas en archivo.</p><button id="pr">Imprimir cartas</button></section>
+<div id="print"></div>
+<script>
+var P=[
+{id:'russell',n:'Bertrand Russell',e:'💈',t:'Paradoja del barbero',f:'Russell halló una contradicción en la teoría de conjuntos: el barbero que afeita a quien no se afeita a sí mismo.'},
+{id:'witt',n:'Ludwig Wittgenstein',e:'🦆🐰',t:'Juegos de lenguaje',f:'Wittgenstein: el significado de una palabra está en su uso, como en un juego con reglas.'},
+{id:'popper',n:'Karl Popper',e:'🦢',t:'Falsacionismo: el cisne negro',f:'Popper: una teoría es científica si puede ser refutada; un solo cisne negro tumba «todos los cisnes son blancos».'},
+{id:'kuhn',n:'Thomas Kuhn',e:'🔄',t:'Revoluciones científicas y paradigmas',f:'Kuhn: la ciencia avanza por cambios de paradigma, no solo por acumulación de datos.'},
+{id:'quine',n:'W.V.O. Quine',e:'🕸️',t:'Holismo: red de creencias',f:'Quine: nuestras creencias forman una red; se contrastan en conjunto, no una por una.'},
+{id:'foucault',n:'Michel Foucault',e:'🗼',t:'Poder-saber y panóptico',f:'Foucault: el saber y el poder se refuerzan; el panóptico vigila sin ser visto.'}];
+function gl(c,r){return '<circle cx="41" cy="52" r="7.5" fill="#fff" stroke="'+c+'" stroke-width="2"/><circle cx="59" cy="52" r="7.5" fill="#fff" stroke="'+c+'" stroke-width="2"/><path d="M48.5 52h3" stroke="'+c+'" stroke-width="2"/>'}
+function face(id){
+var sk='#f3c9a0',o='',sh='#5a6fb0',h='',x='';
+if(id=='russell'){sh='#6b5b95';h='<path d="M20 52C12 24 32 10 50 12C68 10 88 24 80 52C76 36 66 28 50 28C34 28 24 36 20 52Z" fill="#f2f2f2" stroke="#aaa"/>';x='<path d="M33 44q8-6 15 0M52 44q8-6 15 0" stroke="#ccc" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M56 68h20" stroke="#6b4a2b" stroke-width="3"/><rect x="73" y="59" width="9" height="11" rx="2" fill="#6b4a2b"/>'}
+if(id=='witt'){sh='#8a6d3b';h='<path d="M22 54C14 22 38 10 54 14C72 14 86 30 78 54C74 38 64 30 50 30C38 30 28 38 22 54Z" fill="#33231a"/>';x='<path d="M34 46q7-3 13 0M53 46q7-3 13 0" stroke="#33231a" stroke-width="3" fill="none"/><path d="M32 82L50 96L68 82" fill="#fff" stroke="#999"/>'}
+if(id=='popper'){sh='#3d7a6a';h='<path d="M25 48C24 26 36 18 50 18C64 18 76 26 75 48C70 34 62 30 50 30C38 30 30 34 25 48Z" fill="#c9c9c9"/>';x=gl('#333')+'<path d="M46 80l4 16 4-16z" fill="#b5483a"/>'}
+if(id=='kuhn'){sh='#b5683a';h='<path d="M23 50C20 24 36 16 50 16C64 16 80 24 77 50C72 36 64 30 50 30C36 30 28 36 23 50Z" fill="#6a4a30"/>';x='<rect x="32" y="45" width="16" height="13" rx="3" fill="#fff" fill-opacity=".5" stroke="#333" stroke-width="2"/><rect x="52" y="45" width="16" height="13" rx="3" fill="#fff" fill-opacity=".5" stroke="#333" stroke-width="2"/><path d="M48 51h4" stroke="#333" stroke-width="2"/>'}
+if(id=='quine'){sh='#3b6ea5';h='<path d="M24 46C26 24 40 18 52 19C66 20 76 28 76 46C70 34 60 28 46 30C36 31 28 36 24 46Z" fill="#9a9a9a"/>';x='<path d="M40 80l9 6-9 6zM60 80l-9 6 9 6z" fill="#b5483a"/><circle cx="50" cy="86" r="3" fill="#b5483a"/>'}
+if(id=='foucault'){sh='#3a3a3a';h='<path d="M24 46C28 24 40 18 50 18C60 18 72 24 76 46C70 34 62 30 50 30C38 30 30 34 24 46Z" fill="#f3c9a0" opacity=".0"/>';x=gl('#222')+'<rect x="35" y="74" width="30" height="14" rx="6" fill="#222"/>'}
+var m='<path d="M42 66q8 6 16 0" stroke="#7a3b2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+return '<svg viewBox="0 0 100 100" role="img" aria-label="Caricatura de '+id+'"><path d="M14 100Q50 70 86 100Z" fill="'+sh+'"/>'+(id=='foucault'?'<rect x="35" y="74" width="30" height="14" rx="6" fill="#222"/>':'')+'<circle cx="50" cy="52" r="26" fill="'+sk+'"/>'+h+(id=='quine'||id=='russell'||id=='witt'||id=='kuhn'?'<circle cx="41" cy="52" r="2.5" fill="#222"/><circle cx="59" cy="52" r="2.5" fill="#222"/>':'<circle cx="41" cy="52" r="2.5" fill="#222"/><circle cx="59" cy="52" r="2.5" fill="#222"/>')+x+m+'</svg>'}
+function front(c){return c.k=='f'?face(c.id)+'<b>'+c.n+'</b>':'<span class="e">'+c.e+'</span><b>'+c.t+'</b>'}
+var deck=[];P.forEach(function(p){deck.push({id:p.id,k:'f',n:p.n});deck.push({id:p.id,k:'c',e:p.e,t:p.t})});
+var b=document.getElementById('board'),msg=document.getElementById('msg'),mv=document.getElementById('mv'),first=null,lock=false,moves=0,left=6;
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function start(){b.innerHTML='';first=null;lock=false;moves=0;left=6;mv.textContent='Intentos: 0';msg.textContent='Voltea dos cartas para empezar.';
+shuffle(deck.slice()).forEach(function(c){var d=document.createElement('button');d.className='c';d.setAttribute('aria-label','Carta boca abajo');d.innerHTML='<div class="in"><div class="bk">?</div><div class="fa">'+front(c)+'</div></div>';d.onclick=function(){flip(d,c)};b.appendChild(d)})}
+function flip(d,c){if(lock||d.classList.contains('f')||d.classList.contains('m'))return;d.classList.add('f');
+if(!first){first={d:d,c:c};return}
+moves++;mv.textContent='Intentos: '+moves;var a=first;first=null;
+if(a.c.id==c.id){a.d.classList.add('m');d.classList.add('m');left--;var p=P.filter(function(x){return x.id==c.id})[0];
+msg.textContent=left?p.f:'¡Completaste el juego en '+moves+' intentos! '+p.f}
+else{lock=true;setTimeout(function(){a.d.classList.remove('f');d.classList.remove('f');lock=false},1000)}}
+document.getElementById('rs').onclick=start;
+var pr=document.getElementById('print'),h='<div class="sheet">';
+deck.forEach(function(c){h+='<div class="p">'+front(c)+'</div>'});
+h+='</div><div class="sheet" style="break-before:page">';
+for(var i=0;i<12;i++)h+='<div class="p r">?</div>';pr.innerHTML=h+'</div>';
+function tab(g){document.getElementById('game').hidden=!g;document.getElementById('pv').hidden=g;
+document.getElementById('tj').setAttribute('aria-pressed',g);document.getElementById('ti').setAttribute('aria-pressed',!g)}
+document.getElementById('tj').onclick=function(){tab(true)};document.getElementById('ti').onclick=function(){tab(false)};
+document.getElementById('pr').onclick=function(){window.print()};
+start();
+</script></body></html>
